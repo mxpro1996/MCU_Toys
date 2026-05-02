@@ -32,7 +32,7 @@
 
 // SESSION_ON
 #define MAX_FNAME_LEN	16
-#define	MAX_TURN_WAIT	80
+#define	MAX_TURN_WAIT	460
 #define YMODEM_FIFOSIZE	32
 #define get_jiffies() (clock() * 1000 / CLOCKS_PER_SEC)
 

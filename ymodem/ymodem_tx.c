@@ -10,7 +10,7 @@ void YModem_HostProc(YModem_Trans *trans){
 	// RX
 	if(SELF_CALL(trans, recv) > 0){
 		wakeup_tx = 1;
-
+		DEBUG_LOG("TX: R %02x\n", trans->ymodem_rx[0]);
 		switch(trans->ymodem_rx[0]){
 			case YMODEM_REQ:{
 				if(trans->ymodem_sta == IDLE){
@@ -60,6 +60,8 @@ void YModem_HostProc(YModem_Trans *trans){
 		trans->last_rx_jiffies = get_jiffies();
 	}else if(get_jiffies() - trans->last_rx_jiffies > MAX_TURN_WAIT && trans->ymodem_sta!=IDLE ){
 			wakeup_tx = 1;
+			trans->last_rx_jiffies = get_jiffies();
+			DEBUG_LOG("Host: Forced woken\n");
 		// crack deadLock
 	}
 	

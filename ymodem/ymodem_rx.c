@@ -10,7 +10,7 @@ void YModem_DeviceProc(YModem_Trans *trans){
 	// RX
 	if(SELF_CALL(trans, recv) > 0){
 		wakeup_tx1 = 1;
-
+		DEBUG_LOG("RX: R %02x\n", trans->ymodem_rx[0]);
 		switch(trans->ymodem_rx[0]){
 			case YMODEM_SOH: case YMODEM_STX: case YMODEM_SMX:{
 				char* const dptr = trans->ymodem_rx+3;			
@@ -68,6 +68,8 @@ void YModem_DeviceProc(YModem_Trans *trans){
 	}else {
 		if(get_jiffies() - trans->last_rx_jiffies > MAX_TURN_WAIT ){
 			wakeup_tx1 = 1;
+			trans->last_rx_jiffies = get_jiffies();
+			DEBUG_LOG("DEVICE: Forced woken\n");
 		}
 		// crack deadLock
 	}
