@@ -27,10 +27,12 @@ void YModem_DeviceProc(YModem_Trans *trans){
 					
 					trans->ymodem_sta = DATA;
 					if(trans->expectNo==0){	// INFO
-						uint32_t dsize = strlen(dptr);
-						strncpy(trans->fw_name,dptr,16);
+						uint32_t dsize = strlen(trans->fw_name);
+						if(0!=strncmp(trans->fw_name,dptr,dsize)){
+							DEBUG_LOG("Rx & Tx name Mismatched");
+							break;
+						}
 						trans->fw_size = atoi(dptr+dsize+1);
-						
 						trans->lastPackSize = trans->fw_size % typeToPayLen(trans);
 						trans->packCnt = trans->fw_size / typeToPayLen(trans) + (trans->lastPackSize!=0);
 					}else{

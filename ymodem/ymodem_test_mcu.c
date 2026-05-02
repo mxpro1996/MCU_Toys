@@ -24,13 +24,13 @@ int main(){
 	for(int i=0;i<1024;i++)
 	 	tx_mockBuf[i] = i;
 	YModem_InitTrans(&tx_session,"real",tx_mockBuf,512,YMODEM_SMX,tx_recv,tx_send);
-	YModem_InitTrans(&rx_session,"dummy",rx_mockBuf,512,YMODEM_SMX,tx_recv,tx_send);
+	YModem_InitTrans(&rx_session,"real",rx_mockBuf,512,YMODEM_SMX,tx_recv,tx_send);
 
 	while(1){
 			YModem_HostProc(&tx_session);
 			YModem_DeviceProc(&rx_session);
 
-			if(rx_session.expectNo==rx_session.packCnt+1 && rx_session.expectNo==tx_session.expectNo){
+			if(isTransFin(&rx_session)){
 				// for(int i=0;i<tx_session.fw_size;i++)
  				// 	printf("%d=%hhu %hhu\n",i,tx_mockBuf[i],rx_mockBuf[i]);
 				puts("transfer end");

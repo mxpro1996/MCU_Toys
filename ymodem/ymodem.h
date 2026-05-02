@@ -71,7 +71,9 @@ typedef void (*send_func_t)(YModem_Trans *self, uint16_t len);
 
 extern const uint16_t unitTab[];
 
-
+static inline _Bool isTransFin(YModem_Trans *session){
+	return session->expectNo==session->packCnt+1;
+}
 // core-function
 void YModem_InitTrans(YModem_Trans *trans, const char *name, uint8_t *fptr, const uint32_t flen, uint8_t magicChar, recv_func_t recv, send_func_t send);
 _Bool YModem_PreparePack(YModem_Trans *trans, uint8_t *payload, uint16_t plen);

@@ -6,12 +6,12 @@ const uint16_t unitTab[] = {
 };
 
 void YModem_InitTrans(YModem_Trans *trans, const char *name, uint8_t *fptr, const uint32_t flen, uint8_t magicChar, recv_func_t recv, send_func_t send){
+	memset(trans,0,sizeof(*trans));
+
 	trans->fw_base = fptr;
 	trans->fw_size = flen;
 	strncpy(trans->fw_name,name,MAX_FNAME_LEN);
 	
-	trans->expectNo = 0;
-	trans->last_rx_jiffies = 0;
 	trans->unitType = magicChar;
 	trans->lastPackSize = flen % unitTab[magicChar];
 	trans->packCnt = flen / unitTab[magicChar] + (trans->lastPackSize!=0);
