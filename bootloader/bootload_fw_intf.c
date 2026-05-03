@@ -46,6 +46,7 @@ void fw_recvProc(firmware_t *fw){
 	
     while(1){
         sprintf(nameBuf,"block_%u",fw->status.scatter_no);
+        puts(nameBuf);
         // fill
         if(fw->status.scatter_no==0)
 	        YModem_InitTrans(&curTrans,nameBuf,(uint8_t*)&fw->manifest,sizeof(fw->manifest),YMODEM_SMX,tx_recv,tx_send);
@@ -55,11 +56,11 @@ void fw_recvProc(firmware_t *fw){
             YModem_InitTrans(&curTrans,nameBuf,fw->status.fw_data+ (fw->status.scatter_no-1)* fw->manifest.scatter_size, fw->manifest.scatter_size,YMODEM_SMX,tx_recv,tx_send);
 
         // async
-        sem_wait(&rx_sem);
         while(!isTransFin(&curTrans)){
+            sem_wait(&rx_sem);
             YModem_DeviceProc(&curTrans);
+            sem_post(&tx_sem);
         }
-        sem_post(&tx_sem);
 
         // onFinish
         if(fw->status.scatter_no==0){
@@ -80,6 +81,13 @@ void fw_sendProc(firmware_t *fw){
 	
     while(1){
         sprintf(nameBuf,"block_%u",fw->status.scatter_no);
+
+        // onBeforeSend
+        if(fw->status.scatter_no==0){
+            fw->status.scatter_lastSize = fw->manifest.totalSize % fw->manifest.scatter_size;
+            fw->status.scatter_cnt = fw->manifest.totalSize / fw->manifest.scatter_size + (fw->status.scatter_lastSize!=0);
+        }
+
         // fill
         if(fw->status.scatter_no==0)
 	        YModem_InitTrans(&curTrans,nameBuf,(uint8_t*)&fw->manifest,sizeof(fw->manifest),YMODEM_SMX,tx_recv,tx_send);
@@ -89,16 +97,10 @@ void fw_sendProc(firmware_t *fw){
             YModem_InitTrans(&curTrans,nameBuf,fw->status.fw_data + (fw->status.scatter_no-1) * fw->manifest.scatter_size, fw->manifest.scatter_size,YMODEM_SMX,tx_recv,tx_send);
 
         // async
-        sem_wait(&tx_sem);
         while(!isTransFin(&curTrans)){
+            sem_wait(&tx_sem);
             YModem_HostProc(&curTrans);
-        }
-        sem_post(&rx_sem);
-
-        // onFinish
-        if(fw->status.scatter_no==0){
-            fw->status.scatter_lastSize = fw->manifest.totalSize % fw->manifest.scatter_size;
-            fw->status.scatter_cnt = fw->manifest.totalSize / fw->manifest.scatter_size + (fw->status.scatter_lastSize!=0);
+            sem_post(&rx_sem);
         }
 
         fw->status.scatter_no++;
@@ -113,24 +115,24 @@ int main(){
     uint8_t mock_txFile[1024], mock_rxFile[1024];
     pthread_t tx_proc,rx_proc;
 
-
     sem_init(&rx_sem,0,1);
 	sem_init(&tx_sem,0,0);
     
     fw1.status.fw_data = mock_txFile;
-    fw1.manifest.totalSize = 1024;
-    fw1.manifest.scatter_size = 128;
-
     fw2.status.fw_data = mock_rxFile;
-    fw2.manifest.totalSize = 1024;
-    fw2.manifest.scatter_size = 128;    
+    fw1.manifest.totalSize = fw2.manifest.totalSize = 1024;
+    fw1.manifest.scatter_size = fw2.manifest.scatter_size = 128;
 
 	pthread_create(&tx_proc,NULL,(pthread_fptr)fw_sendProc,&fw1);
 	pthread_create(&rx_proc,NULL,(pthread_fptr)fw_recvProc,&fw2);
 
-    while (1){
-        /* code */
-    }
+    // while (1){
+    //     /* code */
+    // }
+
+    pthread_join(tx_proc,NULL);
+    pthread_join(rx_proc,NULL);
+    puts("end here");
 
     return 0;
 }
