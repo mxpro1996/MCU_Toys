@@ -51,7 +51,7 @@ void fw_recvProc(firmware_t *fw){
         if(fw->status.scatter_no==0)
 	        YModem_InitTrans(&curTrans,nameBuf,(uint8_t*)&fw->manifest,sizeof(fw->manifest),YMODEM_SMX,tx_recv,tx_send);
         else if(fw->status.scatter_no==fw->status.scatter_cnt)
-            YModem_InitTrans(&curTrans,nameBuf,fw->status.fw_data+ (fw->status.scatter_no-1) * fw->manifest.scatter_size, fw->status.scatter_lastSize,YMODEM_SMX,tx_recv,tx_send);
+            YModem_InitTrans(&curTrans,nameBuf,fw->status.fw_data+ (fw->status.scatter_no-1) * fw->manifest.scatter_size, (fw->status.scatter_lastSize!=0)?fw->status.scatter_lastSize:fw->manifest.scatter_size,YMODEM_SMX,tx_recv,tx_send);
         else
             YModem_InitTrans(&curTrans,nameBuf,fw->status.fw_data+ (fw->status.scatter_no-1)* fw->manifest.scatter_size, fw->manifest.scatter_size,YMODEM_SMX,tx_recv,tx_send);
 
@@ -92,7 +92,7 @@ void fw_sendProc(firmware_t *fw){
         if(fw->status.scatter_no==0)
 	        YModem_InitTrans(&curTrans,nameBuf,(uint8_t*)&fw->manifest,sizeof(fw->manifest),YMODEM_SMX,tx_recv,tx_send);
         else if(fw->status.scatter_no==fw->status.scatter_cnt)
-            YModem_InitTrans(&curTrans,nameBuf,fw->status.fw_data + (fw->status.scatter_no-1) * fw->manifest.scatter_size, fw->status.scatter_lastSize,YMODEM_SMX,tx_recv,tx_send);
+            YModem_InitTrans(&curTrans,nameBuf,fw->status.fw_data + (fw->status.scatter_no-1) * fw->manifest.scatter_size, (fw->status.scatter_lastSize!=0)?fw->status.scatter_lastSize:fw->manifest.scatter_size,YMODEM_SMX,tx_recv,tx_send);
         else
             YModem_InitTrans(&curTrans,nameBuf,fw->status.fw_data + (fw->status.scatter_no-1) * fw->manifest.scatter_size, fw->manifest.scatter_size,YMODEM_SMX,tx_recv,tx_send);
 
@@ -120,8 +120,8 @@ int main(){
     
     fw1.status.fw_data = mock_txFile;
     fw2.status.fw_data = mock_rxFile;
-    fw1.manifest.totalSize = fw2.manifest.totalSize = 1024;
-    fw1.manifest.scatter_size = fw2.manifest.scatter_size = 128;
+    fw1.manifest.totalSize = 1024;
+    fw1.manifest.scatter_size = 128;
 
 	pthread_create(&tx_proc,NULL,(pthread_fptr)fw_sendProc,&fw1);
 	pthread_create(&rx_proc,NULL,(pthread_fptr)fw_recvProc,&fw2);
